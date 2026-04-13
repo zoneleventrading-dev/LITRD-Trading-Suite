@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LITRD 💃">
+<meta name="theme-color" content="#e94560">
+<link rel="manifest" href="manifest.json">
+<title>LITRD Trading Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080b0f; --bg2:#0d1117; --bg3:#161b22; --bg4:#1c2330;
+  --border:#21262d; --red:#e94560; --green:#1d9e75;
+  --gold:#f7c948; --blue:#58a6ff; --muted:#6e7681; --text:#e6edf3;
+  --safe-top:env(safe-area-inset-top,0px); --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;height:100%;overflow:hidden;display:flex;flex-direction:column}
+
+#splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.splash-glow{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;background:radial-gradient(circle,#e9456018 0%,transparent 70%);pointer-events:none}
+.splash-logo{font-family:'Bebas Neue',sans-serif;font-size:96px;color:var(--red);letter-spacing:12px;line-height:1;animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{0%,100%{text-shadow:0 0 60px #e9456040}50%{text-shadow:0 0 100px #e9456070}}
+.splash-emoji{font-size:56px;margin:-8px 0 16px}
+.splash-sub{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:48px}
+.splash-enter{background:var(--red);color:white;border:none;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;padding:14px 48px;border-radius:8px;cursor:pointer}
+
+#app{display:flex;flex-direction:column;height:100%}
+.status-spacer{height:var(--safe-top);background:var(--bg2)}
+.tabbar{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 4px;flex-shrink:0}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;font-size:10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:500;letter-spacing:0.5px;cursor:pointer;border:none;background:none;gap:4px;position:relative}
+.tab.active{color:var(--red)}
+.tab.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--red);border-radius:2px 2px 0 0}
+.tab-icon{font-size:20px}
+.pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;display:none}
+.page.active{display:block}
+.page-scroll{padding:16px;padding-bottom:calc(16px + var(--safe-bot))}
+
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;color:var(--text);line-height:1}
+.page-title span{color:var(--red)}
+.page-subtitle{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px;margin-bottom:16px}
+.week-pill{display:inline-flex;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:16px}
+
+.instrument-grid{display:grid;gap:10px;margin-bottom:16px}
+.inst-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.inst-card.bull{border-color:#1d9e7540}
+.inst-card.bear{border-color:#e9456040}
+.inst-header{display:flex;align-items:center;gap:10px;padding:12px 14px 0}
+.inst-ticker{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--text)}
+.inst-bias-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.bull .inst-bias-dot{background:var(--green);box-shadow:0 0 8px #1d9e7580}
+.bear .inst-bias-dot{background:var(--red);box-shadow:0 0 8px #e9456080}
+.neutral .inst-bias-dot{background:var(--muted)}
+.inst-bias-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase}
+.bull .inst-bias-label{color:var(--green)}
+.bear .inst-bias-label{color:var(--red)}
+.neutral .inst-bias-label{color:var(--muted)}
+.inst-remove{margin-left:auto;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px}
+.tf-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:10px 14px}
+.tf-cell{background:var(--bg3);border-radius:8px;padding:8px 10px}
+.tf-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.tf-select{width:100%;background:transparent;border:none;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;-webkit-appearance:none}
+.tf-select option{background:var(--bg3)}
+.inst-notes{margin:0 14px 12px;background:var(--bg3);border:none;border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;width:calc(100% - 28px);resize:none;outline:none}
+.inst-notes::placeholder{color:var(--muted)}
+
+.add-row{display:flex;gap:8px;margin-bottom:16px}
+.ticker-field{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;outline:none;text-transform:uppercase}
+.ticker-field:focus{border-color:var(--red)}
+.btn-add{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:20px;cursor:pointer}
+.btn-generate{width:100%;padding:16px;background:var(--red);border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:white;cursor:pointer;margin-bottom:20px;transition:opacity 0.15s}
+.btn-generate:active{opacity:0.8;transform:scale(0.99)}
+
+/* CHEAT CARDS */
+.cheat-cards{display:grid;gap:12px}
+.cheat-card{background:var(--bg2);border-radius:16px;overflow:hidden;border:1px solid var(--border);animation:slideUp 0.3s ease both}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.cheat-card:nth-child(2){animation-delay:0.05s}
+.cheat-card:nth-child(3){animation-delay:0.1s}
+.cheat-card:nth-child(4){animation-delay:0.15s}
+.cheat-card:nth-child(5){animation-delay:0.2s}
+.cheat-card:nth-child(6){animation-delay:0.25s}
+.cheat-card.bull{border-color:#1d9e7550}
+.cheat-card.bear{border-color:#e9456050}
+.card-head{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-head.bull{background:linear-gradient(135deg,#1d9e7512,transparent)}
+.card-head.bear{background:linear-gradient(135deg,#e9456012,transparent)}
+.card-head.neutral{background:var(--bg3)}
+.card-ticker{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px}
+.bull .card-ticker{color:var(--green)}
+.bear .card-ticker{color:var(--red)}
+.neutral .card-ticker{color:var(--muted)}
+.card-bias-badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;padding:4px 10px;border-radius:20px;text-transform:uppercase;font-weight:500}
+.bull .card-bias-badge{background:#1d9e7520;color:var(--green);border:1px solid #1d9e7540}
+.bear .card-bias-badge{background:#e9456020;color:var(--red);border:1px solid #e9456040}
+.neutral .card-bias-badge{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+.card-reason{font-size:11px;color:var(--muted);font-style:italic;margin-left:auto;text-align:right;max-width:130px;line-height:1.3}
+.card-body{padding:14px 16px;display:grid;gap:12px}
+.card-section-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px}
+.label-gold{color:var(--gold)}
+.label-blue{color:var(--blue)}
+.label-red{color:var(--red)}
+.label-muted{color:var(--muted)}
+.card-session{font-size:13px;color:var(--text);font-weight:500}
+.watch-list{display:grid;gap:5px}
+.watch-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text);line-height:1.4}
+.watch-dot{width:5px;height:5px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:5px}
+.avoid-row{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--muted);line-height:1.4}
+.avoid-x{color:var(--red);font-weight:700;flex-shrink:0}
+.discipline-row{background:var(--bg3);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.5;border-left:2px solid var(--muted);font-style:italic}
+
+.saved-notice{display:flex;align-items:center;gap:8px;background:#1d9e7515;border:1px solid #1d9e7530;border-radius:10px;padding:10px 14px;font-size:12px;color:var(--green);font-family:'DM Mono',monospace;letter-spacing:1px;margin-bottom:16px}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-text{font-size:14px;line-height:1.6}
+
+.tools-grid{display:grid;gap:10px}
+.tool-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px}
+.tool-icon{font-size:32px;flex-shrink:0}
+.tool-info{flex:1}
+.tool-name{font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px}
+.tool-desc{font-size:12px;color:var(--muted);line-height:1.4}
+.tool-badge{font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:6px;letter-spacing:1px}
+.badge-live{background:#1d9e7520;color:var(--green);border:1px solid #1d9e7540}
+.badge-soon{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+
+.bottom-safe{height:var(--safe-bot);background:var(--bg2);flex-shrink:0}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-glow"></div>
+  <div class="splash-logo">LITRD</div>
+  <div class="splash-emoji">💃</div>
+  <div class="splash-sub">Goldbach Trading Suite</div>
+  <button class="splash-enter" onclick="enterApp()">ENTER</button>
+</div>
+
+<div id="app" style="display:none">
+  <div class="status-spacer"></div>
+  <div class="tabbar">
+    <button class="tab active" onclick="showTab('prep')" id="tab-prep"><span class="tab-icon">📋</span>PREP</button>
+    <button class="tab" onclick="showTab('sheet')" id="tab-sheet"><span class="tab-icon">📊</span>CHEAT SHEET</button>
+    <button class="tab" onclick="showTab('tools')" id="tab-tools"><span class="tab-icon">🛠</span>TOOLS</button>
+  </div>
+  <div class="pages">
+
+    <!-- PREP -->
+    <div class="page active" id="page-prep">
+      <div class="page-scroll">
+        <div class="page-title"><span>SUN</span>DAY PREP</div>
+        <div class="page-subtitle">Top-down weekly analysis</div>
+        <div class="week-pill" id="weekPill"></div>
+        <div class="add-row">
+          <input type="text" class="ticker-field" id="tickerInput" placeholder="NQ1!" maxlength="8">
+          <button class="btn-add" onclick="addInstrument()">＋</button>
+        </div>
+        <div class="instrument-grid" id="instrumentGrid"></div>
+        <button class="btn-generate" onclick="generateSheet()">GENERATE CHEAT SHEET</button>
+      </div>
+    </div>
+
+    <!-- CHEAT SHEET -->
+    <div class="page" id="page-sheet">
+      <div class="page-scroll">
+        <div class="page-title">CHEAT <span>SHEET</span></div>
+        <div class="page-subtitle" id="sheetWeekLabel"></div>
+        <div id="savedNotice" class="saved-notice" style="display:none">✓ &nbsp;Saved — available offline</div>
+        <div id="sheetContent">
+          <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <div class="empty-text">Complete Sunday prep and tap Generate.<br>Your cheat sheet saves automatically.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOLS -->
+    <div class="page" id="page-tools">
+      <div class="page-scroll">
+        <div class="page-title">TOOL <span>SUITE</span></div>
+        <div class="page-subtitle">Goldbach Trading Tools</div>
+        <div class="tools-grid">
+          <div class="tool-card" onclick="showTab('prep')">
+            <span class="tool-icon">📋</span>
+            <div class="tool-info"><div class="tool-name">Sunday Prep</div><div class="tool-desc">Weekly top-down cheat sheet generator</div></div>
+            <span class="tool-badge badge-live">LIVE</span>
+          </div>
+          <div class="tool-card">
+            <span class="tool-icon">📓</span>
+            <div class="tool-info"><div class="tool-name">Trade Journal</div><div class="tool-desc">Log and review trades by session and day</div></div>
+            <span class="tool-badge badge-soon">SOON</span>
+          </div>
+          <div class="tool-card">
+            <span class="tool-icon">⏱</span>
+            <div class="tool-info"><div class="tool-name">GBT Calculator</div><div class="tool-desc">Check if current time is a Goldbach Time number</div></div>
+            <span class="tool-badge badge-soon">SOON</span>
+          </div>
+          <div class="tool-card">
+            <span class="tool-icon">📐</span>
+            <div class="tool-info"><div class="tool-name">DR Calculator</div><div class="tool-desc">Enter price + PO3, get all 18 Goldbach levels</div></div>
+            <span class="tool-badge badge-soon">SOON</span>
+          </div>
+          <div class="tool-card">
+            <span class="tool-icon">✅</span>
+            <div class="tool-info"><div class="tool-name">Pre-Trade Audit</div><div class="tool-desc">8-point checklist before you pull the trigger</div></div>
+            <span class="tool-badge badge-soon">SOON</span>
+          </div>
+        </div>
+        <div style="margin-top:24px;text-align:center;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted)">
+          LITRD TRADING SUITE · v1.0<br><span style="color:var(--red)">💃</span> Lady In The Red Dress
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="bottom-safe"></div>
+</div>
+
+<script>
+// ── PWA
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+// ── STATE
+const DEFAULTS = ['NQ1!','MNQ1!','ES1!','GC1!','CL1!','SI1!'];
+let instruments = [];
+
+function getWeek(){
+  const d=new Date(), mon=new Date(d);
+  mon.setDate(d.getDate()-d.getDay()+1);
+  const fri=new Date(mon); fri.setDate(mon.getDate()+4);
+  const f=dt=>dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return `Week of ${f(mon)} – ${f(fri)}`;
+}
+
+// ── TEMPLATE ENGINE (no API needed — works offline)
+function buildCard(inst) {
+  const b27 = inst.bias27d, b3 = inst.bias3d, b1 = inst.bias1d;
+
+  // Determine overall bias: 1D carries most weight, then 3D, then 27D
+  let biasDir = 'neutral';
+  const bullVotes = [b1==='bull',b3==='bull',b27==='bull'].filter(Boolean).length;
+  const bearVotes = [b1==='bear',b3==='bear',b27==='bear'].filter(Boolean).length;
+  if(b1==='bull' || (bullVotes >= 2)) biasDir = 'bull';
+  else if(b1==='bear' || (bearVotes >= 2)) biasDir = 'bear';
+
+  // Build reason string from timeframe readings
+  const tfLabels = {bull:'↑',bear:'↓',neutral:'—'};
+  const reason = `27D${tfLabels[b27]} 3D${tfLabels[b3]} 1D${tfLabels[b1]}`;
+
+  // Session logic
+  const primarySession = biasDir === 'bull'
+    ? 'NY Distribution — Tue/Wed/Thu (11:00–15:00 EST)'
+    : biasDir === 'bear'
+    ? 'NY Distribution — Tue/Wed/Thu (11:00–15:00 EST)'
+    : 'Observe only — bias unclear';
+
+  // Watch bullets based on direction
+  let watch = [];
+  if(biasDir === 'bull') {
+    watch = [
+      'Wait for London session to sweep the Asian session low',
+      'Enter at a Goldbach level in the discount zone (<41% DR)',
+      'GBT time candle turns gold — wait for it before executing'
+    ];
+    if(b3 === 'bear' || b27 === 'bear') watch.push('HTF conflict — reduce size, tighter stop');
+  } else if(biasDir === 'bear') {
+    watch = [
+      'Wait for London session to sweep the Asian session high',
+      'Enter at a Goldbach level in the premium zone (>59% DR)',
+      'GBT time candle turns gold — wait for it before executing'
+    ];
+    if(b3 === 'bull' || b27 === 'bull') watch.push('HTF conflict — reduce size, tighter stop');
+  } else {
+    watch = [
+      'No clear directional bias — observe only this week',
+      'Wait for a timeframe to confirm before taking any trade',
+      'Focus on identifying the Asian range and watching for a sweep'
+    ];
+  }
+
+  // Notes integration
+  if(inst.notes && inst.notes.trim()) {
+    watch.push('Note: ' + inst.notes.trim());
+  }
+
+  // Avoid
+  const avoid = biasDir === 'bull'
+    ? 'Daily candle closes below prior 3D low — bias invalidated'
+    : biasDir === 'bear'
+    ? 'Daily candle closes above prior 3D high — bias invalidated'
+    : 'Forcing a trade without clear 1D direction — wait for alignment';
+
+  // Discipline note
+  const discipline = biasDir === 'neutral'
+    ? 'Mixed signals this week. Sit on hands until 1D confirms.'
+    : 'Phone face down during Asian session. Alert fires when execute signal hits.';
+
+  // Special day flags
+  const dayNotes = [];
+  if(b27 === 'bull' && b3 === 'bear') dayNotes.push('⚠️ Monthly bull vs weekly bear — expect choppy M-session');
+  if(b27 === 'bear' && b3 === 'bull') dayNotes.push('⚠️ Monthly bear vs weekly bull — possible dead cat bounce');
+  if(b1 === b3 && b3 === b27 && b1 !== 'neutral') dayNotes.push('✓ All 3 timeframes aligned — highest conviction week');
+
+  return { ticker:inst.ticker, biasDir, bias:biasDir.toUpperCase(), reason,
+           primarySession, watch:watch.slice(0,4), avoid, discipline, dayNotes };
+}
+
+function generateSheet() {
+  const cards = instruments.map(buildCard);
+  const sheetData = { week: getWeek(), cards, generated: Date.now() };
+  try { localStorage.setItem('litrd_sheet', JSON.stringify(sheetData)); } catch(e){}
+
+  showTab('sheet');
+  document.getElementById('sheetWeekLabel').textContent = getWeek();
+  document.getElementById('savedNotice').style.display = 'flex';
+  renderCards(cards);
+}
+
+function renderCards(cards) {
+  document.getElementById('sheetContent').innerHTML =
+    '<div class="cheat-cards">' +
+    cards.map((c,i) => {
+      const bc = c.biasDir==='bull'?'bull':c.biasDir==='bear'?'bear':'neutral';
+      const emoji = c.biasDir==='bull'?'🟢':c.biasDir==='bear'?'🔴':'⚪';
+      return `<div class="cheat-card ${bc}" style="animation-delay:${i*0.05}s">
+        <div class="card-head ${bc}">
+          <span class="card-ticker">${c.ticker}</span>
+          <span class="card-bias-badge">${emoji} ${c.bias}</span>
+          <span class="card-reason">${c.reason}</span>
+        </div>
+        <div class="card-body">
+          ${c.dayNotes.length ? `<div style="background:#f7c94815;border:1px solid #f7c94830;border-radius:8px;padding:8px 10px;font-size:11px;color:var(--gold)">${c.dayNotes.join('<br>')}</div>` : ''}
+          <div>
+            <div class="card-section-label label-gold">PRIMARY SESSION</div>
+            <div class="card-session">${c.primarySession}</div>
+          </div>
+          <div>
+            <div class="card-section-label label-blue">WATCH FOR</div>
+            <div class="watch-list">${c.watch.map(w=>`<div class="watch-item"><div class="watch-dot"></div>${w}</div>`).join('')}</div>
+          </div>
+          <div>
+            <div class="card-section-label label-red">AVOID IF</div>
+            <div class="avoid-row"><span class="avoid-x">✕</span>${c.avoid}</div>
+          </div>
+          <div class="discipline-row">${c.discipline}</div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+// ── LOAD STATE
+function loadState() {
+  try {
+    const s = localStorage.getItem('litrd_instruments');
+    if(s) instruments = JSON.parse(s);
+    else DEFAULTS.forEach(t => instruments.push({ticker:t,bias27d:'neutral',bias3d:'neutral',bias1d:'neutral',notes:''}));
+    const sheet = localStorage.getItem('litrd_sheet');
+    if(sheet) {
+      const d = JSON.parse(sheet);
+      document.getElementById('sheetWeekLabel').textContent = d.week;
+      document.getElementById('savedNotice').style.display = 'flex';
+      renderCards(d.cards);
+    }
+  } catch(e) {
+    DEFAULTS.forEach(t => instruments.push({ticker:t,bias27d:'neutral',bias3d:'neutral',bias1d:'neutral',notes:''}));
+  }
+}
+
+function saveInstruments() {
+  try { localStorage.setItem('litrd_instruments', JSON.stringify(instruments)); } catch(e) {}
+}
+
+// ── UI
+function enterApp() {
+  document.getElementById('splash').style.opacity = '0';
+  document.getElementById('splash').style.transition = 'opacity 0.3s';
+  setTimeout(() => {
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  }, 300);
+}
+
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');
+}
+
+function addInstrument(ticker) {
+  const t=(ticker||document.getElementById('tickerInput').value.trim().toUpperCase());
+  if(!t||instruments.find(i=>i.ticker===t)) return;
+  instruments.push({ticker:t,bias27d:'neutral',bias3d:'neutral',bias1d:'neutral',notes:''});
+  document.getElementById('tickerInput').value='';
+  saveInstruments(); renderInstruments();
+}
+
+function removeInstrument(ticker) {
+  instruments=instruments.filter(i=>i.ticker!==ticker);
+  saveInstruments(); renderInstruments();
+}
+
+function updateField(ticker,field,value) {
+  const inst=instruments.find(i=>i.ticker===ticker);
+  if(inst){inst[field]=value;saveInstruments();}
+  if(field==='bias1d') renderInstruments();
+}
+
+function renderInstruments() {
+  document.getElementById('weekPill').textContent = getWeek();
+  document.getElementById('instrumentGrid').innerHTML = instruments.map(inst => {
+    const bc=inst.bias1d==='bull'?'bull':inst.bias1d==='bear'?'bear':'neutral';
+    const bl=inst.bias1d==='bull'?'BULL':inst.bias1d==='bear'?'BEAR':'NEUTRAL';
+    return `<div class="inst-card ${bc}">
+      <div class="inst-header">
+        <div class="inst-bias-dot"></div>
+        <span class="inst-ticker">${inst.ticker}</span>
+        <span class="inst-bias-label">${bl}</span>
+        <button class="inst-remove" onclick="removeInstrument('${inst.ticker}')">×</button>
+      </div>
+      <div class="tf-row">
+        <div class="tf-cell">
+          <div class="tf-label">27D Monthly</div>
+          <select class="tf-select" onchange="updateField('${inst.ticker}','bias27d',this.value)">
+            <option value="neutral" ${inst.bias27d==='neutral'?'selected':''}>— Neutral</option>
+            <option value="bull"    ${inst.bias27d==='bull'?'selected':''}>↑ Bull</option>
+            <option value="bear"    ${inst.bias27d==='bear'?'selected':''}>↓ Bear</option>
+          </select>
+        </div>
+        <div class="tf-cell">
+          <div class="tf-label">3D Weekly</div>
+          <select class="tf-select" onchange="updateField('${inst.ticker}','bias3d',this.value)">
+            <option value="neutral" ${inst.bias3d==='neutral'?'selected':''}>— Neutral</option>
+            <option value="bull"    ${inst.bias3d==='bull'?'selected':''}>↑ Bull</option>
+            <option value="bear"    ${inst.bias3d==='bear'?'selected':''}>↓ Bear</option>
+          </select>
+        </div>
+        <div class="tf-cell">
+          <div class="tf-label">1D Daily</div>
+          <select class="tf-select" onchange="updateField('${inst.ticker}','bias1d',this.value)">
+            <option value="neutral" ${inst.bias1d==='neutral'?'selected':''}>— Neutral</option>
+            <option value="bull"    ${inst.bias1d==='bull'?'selected':''}>↑ Bull</option>
+            <option value="bear"    ${inst.bias1d==='bear'?'selected':''}>↓ Bear</option>
+          </select>
+        </div>
+      </div>
+      <textarea class="inst-notes" rows="2"
+        placeholder="Notes: FVG, inside bar, key levels..."
+        onchange="updateField('${inst.ticker}','notes',this.value)">${inst.notes}</textarea>
+    </div>`;
+  }).join('');
+}
+
+loadState();
+renderInstruments();
+document.getElementById('tickerInput').addEventListener('keydown',e=>{if(e.key==='Enter')addInstrument()});
+</script>
+</body>
+</html>
